@@ -8,3 +8,8 @@
 - Veronika Minddal 
 - Natasja Vitoft
 - Frederik G. Johannessen
+
+
+### Relevante links
+https://www.electronicoscaldas.com/datasheet/MG996R_Tower-Pro.pdf
+
