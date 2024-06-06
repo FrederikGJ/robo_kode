@@ -1,48 +1,43 @@
- #include <Servo.h>
+#include <Servo.h>                         // Inkluderer Servo biblioteket for at kontrollere servo motoren
 
-Servo servo;
+Servo servo;                               // Opretter en servo objekt
 
-#define LED1 D1 // Led in NodeMCU at pin D1
+#define LED1 D1                            // Definerer LED1 som værende tilsluttet NodeMCU pin D1
 
-unsigned long previousMillisLED = 0;        // variabel til at gemme sidste tid LED blev opdateret
-unsigned long previousMillisServo = 0;      // variabel til at gemme sidste tid servo blev opdateret
+unsigned long previousMillisLED = 0;       // Variabel til at gemme sidste tid LED blev opdateret
+unsigned long previousMillisServo = 0;     // Variabel til at gemme sidste tid servo blev opdateret
 
-const long intervalLED = 500;               // interval for LED blink (i millisekunder)
-const long intervalServo = 1500;            // interval for servo bevægelse (i millisekunder)
+const long intervalLED = 500;              // Interval for LED blink (i millisekunder)
+const long intervalServo = 1500;           // Interval for servo bevægelse (i millisekunder)
 
-bool ledState = LOW;                        // variabel til at gemme LED tilstand
-bool servoMovingForward = true;             // variabel til at bestemme servo retning
+bool ledState = LOW;                       // Variabel til at gemme LED tilstand (LOW = slukket, HIGH = tændt)
+bool servoMovingForward = true;            // Variabel til at bestemme servo retning (true = fremad, false = tilbage)
 
 void setup() {
-  Serial.begin(115200);                     // Start seriel kommunikation for debug
-  pinMode(LED1, OUTPUT);                    // LED1 D1 pin som output
-  servo.attach(2);                          // D4
-  servo.write(0);                           // start position for servo
+  pinMode(LED1, OUTPUT);                   // Sætter LED1 pin som output
+  servo.attach(2);                         // Tilslutter servo til pin D4 (GPIO2)
+  servo.write(0);                          // Sætter startposition for servo til 0 grader
 }
 
 void loop() {
-  unsigned long currentMillis = millis();   // gem nuværende tid
+  unsigned long currentMillis = millis();  // Gemmer den nuværende tid i millisekunder
 
   // Opdater LED
   if (currentMillis - previousMillisLED >= intervalLED) {
-    previousMillisLED = currentMillis;
-    ledState = !ledState;                   // skift LED tilstand
-    digitalWrite(LED1, ledState);           // opdater LED
-    Serial.print("LED state: ");
-    Serial.println(ledState);               // Print LED tilstand for debug
+    previousMillisLED = currentMillis;     // Opdaterer previousMillisLED til den nuværende tid
+    ledState = !ledState;                  // Skifter LED tilstand (fra tændt til slukket eller omvendt)
+    digitalWrite(LED1, ledState);          // Opdaterer LED til den nye tilstand
   }
 
   // Opdater Servo
   if (currentMillis - previousMillisServo >= intervalServo) {
-    previousMillisServo = currentMillis;
+    previousMillisServo = currentMillis;   // Opdaterer previousMillisServo til den nuværende tid
 
     if (servoMovingForward) {
-      servo.write(180);                     // bevæg servo fremad
-      Serial.println("Servo moving to 180"); // Print servo position for debug
+      servo.write(180);                    // Bevæger servo til 180 grader (fremad)
     } else {
-      servo.write(0);                       // bevæg servo tilbage
-      Serial.println("Servo moving to 0");   // Print servo position for debug
+      servo.write(0);                      // Bevæger servo tilbage til 0 grader (tilbage)
     }
-    servoMovingForward = !servoMovingForward;  // skift retning
+    servoMovingForward = !servoMovingForward; // Skifter retning (fra fremad til tilbage eller omvendt)
   }
 }
