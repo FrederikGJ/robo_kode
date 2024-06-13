@@ -1,13 +1,4 @@
-#define BLYNK_TEMPLATE_ID "TMPL5V8No8mX-"
-#define BLYNK_TEMPLATE_NAME "Control DC motor"
-#define BLYNK_DEVICE_NAME "motorcontroller"  // You can set this to any name you like
-
-#include <Servo.h>  // Include Servo library for controlling the servo motor
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
-
-#define WIFI_SSID "WIFI_FREE"  // Replace "WIFI_FREE" with your WiFi SSID
-#define WIFI_PASS ""  // If your WiFi has no password, leave this empty
+#include <Servo.h>  // Inkluderer Servo biblioteket for at kontrollere servo motoren
 
 #define ENA D0
 #define IN1 D1
@@ -16,21 +7,19 @@
 #define IN4 D4
 #define ENB D5
 
-Servo servo;  // Create a Servo object
+Servo servo;  // Opretter et servo objekt
 
-unsigned long previousMillisServo = 0;  // Variable to store the last time the servo was updated
-const long intervalServo = 1500;  // Interval for servo movement (in milliseconds)
+unsigned long previousMillisMotor = 0;  // Variabel til at gemme sidste tid motorerne blev opdateret
+unsigned long previousMillisServo = 0;  // Variabel til at gemme sidste tid servo blev opdateret
 
-bool motorRunning = false;  // Variable to store motor state (false = off, true = on)
-bool servoMovingForward = true;  // Variable to determine servo direction (true = forward, false = backward)
+const long intervalMotor = 3000;  // Interval for motor kørsel og stop (i millisekunder)
+const long intervalServo = 1500;  // Interval for servo bevægelse (i millisekunder)
+
+bool motorRunning = false;  // Variabel til at gemme motorens tilstand (false = slukket, true = tændt)
+bool servoMovingForward = true;  // Variabel til at bestemme servo retning (true = fremad, false = tilbage)
 
 void setup() {
-  // Debug console
-  Serial.begin(9600);
-
-  Blynk.begin(BLYNK_TEMPLATE_ID, WIFI_SSID, WIFI_PASS);
-
-  // Set all motor controller pins to output
+  // Sætter alle motorcontroller pins til output
   pinMode(ENA, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
@@ -38,52 +27,51 @@ void setup() {
   pinMode(IN4, OUTPUT);
   pinMode(ENB, OUTPUT);
 
-  // Set motors to start in off state
+  // Sætter motorerne til at starte i slukket tilstand
   digitalWrite(ENA, LOW);
   digitalWrite(ENB, LOW);
 
-  // Attach servo to pin D7 (GPIO13)
+  // Tilslutter servo til pin D7 (GPIO13)
   servo.attach(D7);
-  delay(1000);  // Give some time for the servo to initialize
-  servo.write(0);  // Set start position for servo to 0 degrees
+  servo.write(0);  // Sætter startposition for servo til 0 grader
 }
 
 void loop() {
-  Blynk.run();
+  unsigned long currentMillis = millis();  // Gemmer den nuværende tid i millisekunder
 
-  // Handle servo movement
-  unsigned long currentMillis = millis();
+  // Opdater Motorer
+  if (currentMillis - previousMillisMotor >= intervalMotor) {
+    previousMillisMotor = currentMillis;  // Opdaterer previousMillisMotor til den nuværende tid
+
+    if (motorRunning) {
+      // Slukker motorerne
+      digitalWrite(ENA, LOW);
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, LOW);
+      digitalWrite(ENB, LOW);
+      digitalWrite(IN3, LOW);
+      digitalWrite(IN4, LOW);
+    } else {
+      // Tænder motorerne
+      digitalWrite(ENA, HIGH);
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      digitalWrite(ENB, HIGH);
+      digitalWrite(IN3, HIGH);
+      digitalWrite(IN4, LOW);
+    }
+    motorRunning = !motorRunning;  // Skifter motor tilstand
+  }
+
+  // Opdater Servo
   if (currentMillis - previousMillisServo >= intervalServo) {
-    previousMillisServo = currentMillis;  // Update previousMillisServo to the current time
+    previousMillisServo = currentMillis;  // Opdaterer previousMillisServo til den nuværende tid
 
     if (servoMovingForward) {
-      servo.write(180);  // Move servo to 180 degrees (forward)
+      servo.write(45);  // Bevæger servo til 180 grader (fremad)
     } else {
-      servo.write(0);  // Move servo back to 0 degrees (backward)
+      servo.write(0);  // Bevæger servo tilbage til 0 grader (tilbage)
     }
-    servoMovingForward = !servoMovingForward;  // Toggle direction
+    servoMovingForward = !servoMovingForward;  // Skifter retning (fra fremad til tilbage eller omvendt)
   }
-}
-
-// Function to control the motor
-BLYNK_WRITE(V1) {
-  int value = param.asInt();
-  if (value == 1) {
-    // Turn on the motors
-    digitalWrite(ENA, HIGH);
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-    digitalWrite(ENB, HIGH);
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
-  } else {
-    // Turn off the motors
-    digitalWrite(ENA, LOW);
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, LOW);
-    digitalWrite(ENB, LOW);
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, LOW);
-  }
-  motorRunning = !motorRunning;  // Toggle motor state
 }
